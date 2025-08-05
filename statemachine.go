@@ -6,8 +6,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-
-	"github.com/kkiling/statemachine/internal/storage"
+	"github.com/kkiling/goplatform/storagebase"
 )
 
 type Config struct {
@@ -46,7 +45,7 @@ func (i *StateMachine[DataT, FailDataT, MetaDataT, StepT, TypeT, CreateOptionsT]
 	switch {
 	case err == nil: // Выпуск найден
 		return mapStorageToState[DataT, FailDataT, MetaDataT, StepT, TypeT](findState)
-	case errors.Is(err, storage.ErrNotFound): // Выпуск не найден
+	case errors.Is(err, storagebase.ErrNotFound): // Выпуск не найден
 		return nil, nil
 	default:
 		return nil, fmt.Errorf("storage.GetStateByIdempotencyKey: %w", err)

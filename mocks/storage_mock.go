@@ -12,7 +12,7 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	uuid "github.com/google/uuid"
 
-	"github.com/kkiling/statemachine/internal/storage"
+	storage "github.com/kkiling/statemachine/internal/storage"
 )
 
 // MockStorage is a mock of Storage interface.

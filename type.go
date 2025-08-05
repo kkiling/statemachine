@@ -1,7 +1,11 @@
 package statemachine
 
-import "github.com/kkiling/statemachine/internal/storage/sqlite"
+import (
+	"github.com/kkiling/goplatform/storagebase/sqlitebase"
 
-type SqliteConfig = sqlite.Config
+	"github.com/kkiling/statemachine/internal/storage/sqlite"
+)
+
+type SqliteConfig = sqlitebase.Config
 
 var NewSqliteStorage = sqlite.NewStorage

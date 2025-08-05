@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/kkiling/goplatform/storagebase"
+	"github.com/kkiling/goplatform/storagebase/testutils"
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/require"
 
@@ -16,7 +18,7 @@ import (
 func TestCreateState(t *testing.T) {
 	t.Parallel()
 
-	s := setupTestDB(t)
+	s, _ := NewTestStorage(testutils.SetupSqlTestDB(t))
 	ctx := context.Background()
 
 	t.Run("successful creation", func(t *testing.T) {
@@ -63,7 +65,7 @@ func TestCreateState(t *testing.T) {
 		// Попытка сохранить с тем же ID должна вернуть ошибку
 		err = s.CreateState(ctx, state)
 		require.Error(t, err)
-		require.ErrorIs(t, err, storage.ErrAlreadyExists)
+		require.ErrorIs(t, err, storagebase.ErrAlreadyExists)
 	})
 
 	t.Run("duplicate idempotency_key", func(t *testing.T) {
@@ -102,7 +104,7 @@ func TestCreateState(t *testing.T) {
 		// Попытка сохранить с тем же ключом идемпотентности должна вернуть ошибку
 		err = s.CreateState(ctx, state2)
 		require.Error(t, err)
-		require.ErrorIs(t, err, storage.ErrAlreadyExists)
+		require.ErrorIs(t, err, storagebase.ErrAlreadyExists)
 	})
 
 	t.Run("with empty data", func(t *testing.T) {
@@ -133,7 +135,7 @@ func TestCreateState(t *testing.T) {
 
 func TestGetStateByIdempotencyKey(t *testing.T) {
 	t.Parallel()
-	s := setupTestDB(t)
+	s, _ := NewTestStorage(testutils.SetupSqlTestDB(t))
 	ctx := context.Background()
 
 	t.Run("successful get", func(t *testing.T) {
@@ -173,7 +175,7 @@ func TestGetStateByIdempotencyKey(t *testing.T) {
 
 		// Проверяем, что получили ожидаемую ошибку
 		require.Nil(t, state)
-		require.ErrorIs(t, err, storage.ErrNotFound)
+		require.ErrorIs(t, err, storagebase.ErrNotFound)
 	})
 
 	t.Run("empty idempotency key", func(t *testing.T) {
@@ -184,13 +186,13 @@ func TestGetStateByIdempotencyKey(t *testing.T) {
 
 		require.Nil(t, state)
 		require.Error(t, err)
-		require.ErrorIs(t, err, storage.ErrNotFound)
+		require.ErrorIs(t, err, storagebase.ErrNotFound)
 	})
 }
 
 func TestGetStateByID(t *testing.T) {
 	t.Parallel()
-	s := setupTestDB(t)
+	s, _ := NewTestStorage(testutils.SetupSqlTestDB(t))
 	ctx := context.Background()
 
 	// Подготовка тестовых данных
@@ -229,7 +231,7 @@ func TestGetStateByID(t *testing.T) {
 		state, err := s.GetStateByID(ctx, nonExistentID)
 
 		require.Nil(t, state)
-		require.ErrorIs(t, err, storage.ErrNotFound)
+		require.ErrorIs(t, err, storagebase.ErrNotFound)
 	})
 
 	t.Run("empty UUID", func(t *testing.T) {
@@ -239,12 +241,12 @@ func TestGetStateByID(t *testing.T) {
 
 		require.Nil(t, state)
 		require.Error(t, err)
-		require.ErrorIs(t, err, storage.ErrNotFound)
+		require.ErrorIs(t, err, storagebase.ErrNotFound)
 	})
 }
 
 func TestSaveStepExecuteInfo(t *testing.T) {
-	s := setupTestDB(t)
+	s, _ := NewTestStorage(testutils.SetupSqlTestDB(t))
 	ctx := context.Background()
 
 	saveTestState := func(t *testing.T) *storage.State {
@@ -332,7 +334,7 @@ func TestSaveStepExecuteInfo(t *testing.T) {
 }
 
 func TestGetStepExecuteInfos(t *testing.T) {
-	s := setupTestDB(t)
+	s, _ := NewTestStorage(testutils.SetupSqlTestDB(t))
 	ctx := context.Background()
 
 	saveTestState := func(t *testing.T) *storage.State {
@@ -421,7 +423,7 @@ func TestGetStepExecuteInfos(t *testing.T) {
 }
 
 func TestUpdateState(t *testing.T) {
-	s := setupTestDB(t)
+	s, _ := NewTestStorage(testutils.SetupSqlTestDB(t))
 	ctx := context.Background()
 
 	const (
@@ -514,7 +516,7 @@ func TestUpdateState(t *testing.T) {
 
 		err := s.UpdateState(ctx, uuid.New(), update)
 		require.Error(t, err)
-		require.ErrorIs(t, err, storage.ErrNotFound)
+		require.ErrorIs(t, err, storagebase.ErrNotFound)
 	})
 
 	t.Run("update with null data fields", func(t *testing.T) {

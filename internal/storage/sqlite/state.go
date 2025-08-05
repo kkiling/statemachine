@@ -5,6 +5,7 @@ import (
 	"database/sql"
 
 	"github.com/google/uuid"
+	"github.com/kkiling/goplatform/storagebase"
 
 	"github.com/kkiling/statemachine/internal/storage"
 )
@@ -17,7 +18,7 @@ func (s *Storage) CreateState(ctx context.Context, state *storage.State) error {
 		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
-	_, err := s.next(ctx).ExecContext(ctx, query,
+	_, err := s.base.Next(ctx).ExecContext(ctx, query,
 		state.ID[:],
 		state.IdempotencyKey[:],
 		state.CreatedAt,
@@ -31,7 +32,7 @@ func (s *Storage) CreateState(ctx context.Context, state *storage.State) error {
 	)
 
 	if err != nil {
-		return handleError(err)
+		return s.base.HandleError(err)
 	}
 
 	return err
@@ -49,7 +50,7 @@ func (s *Storage) GetStateByIdempotencyKey(ctx context.Context, idempotencyKey s
 	var state storage.State
 	var idBytes []byte
 
-	err := s.next(ctx).QueryRowContext(ctx, query, idempotencyKey[:]).Scan(
+	err := s.base.Next(ctx).QueryRowContext(ctx, query, idempotencyKey[:]).Scan(
 		&idBytes,
 		&state.IdempotencyKey,
 		&state.CreatedAt,
@@ -63,7 +64,7 @@ func (s *Storage) GetStateByIdempotencyKey(ctx context.Context, idempotencyKey s
 	)
 
 	if err != nil {
-		return nil, handleError(err)
+		return nil, s.base.HandleError(err)
 	}
 
 	state.ID, err = uuid.FromBytes(idBytes)
@@ -86,7 +87,7 @@ func (s *Storage) GetStateByID(ctx context.Context, stateID uuid.UUID) (*storage
 	var state storage.State
 	var idBytes []byte
 
-	err := s.next(ctx).QueryRowContext(ctx, query, stateID[:]).Scan(
+	err := s.base.Next(ctx).QueryRowContext(ctx, query, stateID[:]).Scan(
 		&idBytes,
 		&state.IdempotencyKey,
 		&state.CreatedAt,
@@ -100,7 +101,7 @@ func (s *Storage) GetStateByID(ctx context.Context, stateID uuid.UUID) (*storage
 	)
 
 	if err != nil {
-		return nil, handleError(err)
+		return nil, s.base.HandleError(err)
 	}
 
 	state.ID, err = uuid.FromBytes(idBytes)
@@ -119,7 +120,7 @@ func (s *Storage) SaveStepExecuteInfo(ctx context.Context, execute storage.StepE
 		) VALUES (?, ?, ?, ?, ?, ?)
 	`
 
-	_, err := s.next(ctx).ExecContext(ctx, query,
+	_, err := s.base.Next(ctx).ExecContext(ctx, query,
 		execute.StateID[:],
 		execute.StartExecutedAt,
 		execute.CompleteExecutedAt,
@@ -128,7 +129,7 @@ func (s *Storage) SaveStepExecuteInfo(ctx context.Context, execute storage.StepE
 		execute.NextStep,
 	)
 
-	return handleError(err)
+	return s.base.HandleError(err)
 }
 
 func (s *Storage) GetStepExecuteInfos(ctx context.Context, stateID uuid.UUID) ([]storage.StepExecuteInfo, error) {
@@ -141,7 +142,7 @@ func (s *Storage) GetStepExecuteInfos(ctx context.Context, stateID uuid.UUID) ([
         ORDER BY start_executed_at
     `
 
-	rows, err := s.next(ctx).QueryContext(ctx, query, stateID[:])
+	rows, err := s.base.Next(ctx).QueryContext(ctx, query, stateID[:])
 	if err != nil {
 		return nil, err
 	}
@@ -164,7 +165,7 @@ func (s *Storage) GetStepExecuteInfos(ctx context.Context, stateID uuid.UUID) ([
 			&nextStep,
 		)
 		if err != nil {
-			return nil, handleError(err)
+			return nil, s.base.HandleError(err)
 		}
 
 		info.StateID, err = uuid.FromBytes(stateIDBytes)
@@ -203,7 +204,7 @@ func (s *Storage) UpdateState(ctx context.Context, stateID uuid.UUID, state stor
 		WHERE id = ?
 	`
 
-	result, err := s.next(ctx).ExecContext(ctx, query,
+	result, err := s.base.Next(ctx).ExecContext(ctx, query,
 		state.UpdatedAt,
 		state.Status,
 		state.Step,
@@ -214,16 +215,16 @@ func (s *Storage) UpdateState(ctx context.Context, stateID uuid.UUID, state stor
 	)
 
 	if err != nil {
-		return handleError(err)
+		return s.base.HandleError(err)
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return handleError(err)
+		return s.base.HandleError(err)
 	}
 
 	if rowsAffected == 0 {
-		return storage.ErrNotFound
+		return storagebase.ErrNotFound
 	}
 
 	return nil

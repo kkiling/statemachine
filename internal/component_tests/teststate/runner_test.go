@@ -8,6 +8,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/google/uuid"
+	"github.com/kkiling/goplatform/storagebase"
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/require"
 
@@ -77,7 +78,8 @@ func TestTaskRunner_MockDb(t *testing.T) {
 		deps.uuidGenerator.EXPECT().New().Return(stateID)
 		deps.clock.EXPECT().Now().Return(createdAt)
 		// По IdempotencyKey ничего не нашли
-		deps.storageMock.EXPECT().GetStateByIdempotencyKey(gomock.Any(), createOpts.IdempotencyKey).Return(nil, storage.ErrNotFound)
+		deps.storageMock.EXPECT().GetStateByIdempotencyKey(gomock.Any(), createOpts.IdempotencyKey).
+			Return(nil, storagebase.ErrNotFound)
 		// Создаем запись стейта в базе
 		deps.storageMock.EXPECT().CreateState(gomock.Any(), initStateDb()).Return(nil)
 
@@ -102,7 +104,7 @@ func TestTaskRunner_MockDb(t *testing.T) {
 	// Попытка выполнить Complete для не существующего стейта
 	t.Run("complete not found state", func(t *testing.T) {
 		// Выпуск не найден
-		deps.storageMock.EXPECT().GetStateByID(gomock.Any(), stateID).Return(nil, storage.ErrNotFound)
+		deps.storageMock.EXPECT().GetStateByID(gomock.Any(), stateID).Return(nil, storagebase.ErrNotFound)
 		completeState, executeErr, err := deps.service.Complete(deps.ctx, stateID)
 		require.Error(t, err)
 		require.ErrorIs(t, err, statemachine.ErrNotFound)

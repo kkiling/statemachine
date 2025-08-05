@@ -1,17 +1,9 @@
 package storage
 
 import (
-	"errors"
 	"time"
 
 	"github.com/google/uuid"
-)
-
-var (
-	// ErrNotFound объект не найден в базе
-	ErrNotFound = errors.New("entity not found")
-	// ErrAlreadyExists запись уже существует
-	ErrAlreadyExists = errors.New("entity already exists")
 )
 
 // State состояние стейт машины

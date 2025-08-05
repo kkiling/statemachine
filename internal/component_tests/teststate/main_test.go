@@ -5,11 +5,9 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/kkiling/goplatform/log"
-	"github.com/stretchr/testify/require"
+	"github.com/kkiling/goplatform/storagebase/testutils"
 
 	"github.com/kkiling/statemachine/internal/storage/sqlite"
-	"github.com/kkiling/statemachine/internal/testutils"
 	mock_statemachine "github.com/kkiling/statemachine/mocks"
 )
 
@@ -50,23 +48,9 @@ func setupTestDeps(t *testing.T, opts ...func(d *testDeps)) *testDeps {
 	return deps
 }
 
-func setupTestDB(t *testing.T) *sqlite.Storage {
-	// Инициализируем хранилище
-	cfg := sqlite.Config{
-		DSN: testutils.GetSqliteTestDNS(t), // Берем DSN из переменных окружения
-	}
-	logger := log.NewLogger(log.DebugLevel)
-
-	s, err := sqlite.NewStorage(cfg, logger)
-	require.NoError(t, err)
-
-	// Возвращаем хранилище и функцию очистки
-	return s
-}
-
 func setupTestDepsSqlite(t *testing.T) *testDeps {
 	return setupTestDeps(t, func(deps *testDeps) {
-		deps.storageSqlite = setupTestDB(t)
+		deps.storageSqlite, _ = sqlite.NewTestStorage(testutils.SetupSqlTestDB(t))
 		deps.storageMock = nil
 		deps.service = NewState(deps.storageSqlite)
 		deps.service.SetClock(deps.clock)
