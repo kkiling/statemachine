@@ -103,7 +103,7 @@ func TestTaskRunner_MockDb(t *testing.T) {
 
 	// Попытка выполнить Complete для не существующего стейта
 	t.Run("complete not found state", func(t *testing.T) {
-		// Выпуск не найден
+		// Стейт не найден
 		deps.storageMock.EXPECT().GetStateByID(gomock.Any(), stateID).Return(nil, storagebase.ErrNotFound)
 		completeState, executeErr, err := deps.service.Complete(deps.ctx, stateID)
 		require.Error(t, err)

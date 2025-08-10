@@ -35,3 +35,15 @@ type UUIDGenerator interface {
 type Clock interface {
 	Now() time.Time
 }
+
+type uuidGenerator struct{}
+
+func (uuidGenerator) New() uuid.UUID {
+	return uuid.New()
+}
+
+type realClock struct{}
+
+func (realClock) Now() time.Time {
+	return time.Now()
+}

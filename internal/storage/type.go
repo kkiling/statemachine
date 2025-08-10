@@ -22,7 +22,7 @@ type State struct {
 	Step string
 	// Type тип состояния
 	Type string
-	// Data данные выпуска
+	// Data данные стейта
 	Data []byte
 	// FailData Данные фейла стейта
 	FailData []byte
@@ -38,7 +38,7 @@ type UpdateState struct {
 	Status uint8
 	// Step текущий шаг
 	Step string
-	// Data данные выпуска
+	// Data данные стейта
 	Data []byte
 	// FailData Данные фейла стейта
 	FailData []byte

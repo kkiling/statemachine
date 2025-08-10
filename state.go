@@ -32,7 +32,7 @@ type State[DataT any, FailDataT any, MetaDataT any, StepT ~string, TypeT ~string
 	Step StepT
 	// Type тип состояния
 	Type TypeT
-	// Data данные выпуска
+	// Data данные стейта
 	Data DataT
 	// FailData Данные фейла стейта
 	FailData FailDataT
@@ -40,7 +40,7 @@ type State[DataT any, FailDataT any, MetaDataT any, StepT ~string, TypeT ~string
 	MetaData MetaDataT
 }
 
-// CreateState структура инициализации выпуска
+// CreateState структура инициализации стейта
 type CreateState[DataT any, MetaDataT any, StepT ~string] struct {
 	// FirstStep первый тип шага с которого начинать выполнение стейт машины
 	FirstStep StepT

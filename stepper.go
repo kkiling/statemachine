@@ -73,7 +73,7 @@ func (s *Stepper[DataT, FailDataT, MetaDataT, StepT, TypeT]) Compete(
 		}
 
 		if stepInfo.OptionsType == nil && completeOptions != nil {
-			return nil, nil, fmt.Errorf("optionsType is undefined and completeOptions is specified")
+			return nil, nil, ErrOptionsIsUndefined
 		}
 
 		// Выполнение шага
@@ -89,7 +89,7 @@ func (s *Stepper[DataT, FailDataT, MetaDataT, StepT, TypeT]) Compete(
 		// Фиксация времени выполнения шага
 		execute.CompleteExecutedAt = s.clock.Now()
 		if stepResult.newData != nil {
-			// Обновляем данные выпуска
+			// Обновляем данные стейта
 			newState.Data = *stepResult.newData
 		}
 

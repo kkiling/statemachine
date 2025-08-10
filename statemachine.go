@@ -43,22 +43,27 @@ func (i *StateMachine[DataT, FailDataT, MetaDataT, StepT, TypeT, CreateOptionsT]
 ) (*State[DataT, FailDataT, MetaDataT, StepT, TypeT], error) {
 	findState, err := i.storage.GetStateByIdempotencyKey(ctx, idempotencyKey)
 	switch {
-	case err == nil: // Выпуск найден
-		return mapStorageToState[DataT, FailDataT, MetaDataT, StepT, TypeT](findState)
-	case errors.Is(err, storagebase.ErrNotFound): // Выпуск не найден
+	case err == nil:
+	case errors.Is(err, storagebase.ErrNotFound): // Стейт не найден
 		return nil, nil
 	default:
 		return nil, fmt.Errorf("storage.GetStateByIdempotencyKey: %w", err)
 	}
+	// Стейт найден
+	return mapStorageToState[DataT, FailDataT, MetaDataT, StepT, TypeT](findState)
 }
 
-func (i *StateMachine[DataT, FailDataT, MetaDataT, StepT, TypeT, CreateOptionsT]) getStateByID(
+func (i *StateMachine[DataT, FailDataT, MetaDataT, StepT, TypeT, CreateOptionsT]) GetStateByID(
 	ctx context.Context,
 	stateID uuid.UUID,
 ) (*State[DataT, FailDataT, MetaDataT, StepT, TypeT], error) {
 	findState, err := i.storage.GetStateByID(ctx, stateID)
-	if err != nil {
-		return nil, ErrNotFound
+	switch {
+	case err == nil:
+	case errors.Is(err, storagebase.ErrNotFound): // Стейт не найден
+		return nil, nil
+	default:
+		return nil, fmt.Errorf("storage.GetStateByID: %w", err)
 	}
 	return mapStorageToState[DataT, FailDataT, MetaDataT, StepT, TypeT](findState)
 }
@@ -68,7 +73,7 @@ func (i *StateMachine[DataT, FailDataT, MetaDataT, StepT, TypeT, CreateOptionsT]
 	ctx context.Context,
 	options CreateOptionsT,
 ) (*State[DataT, FailDataT, MetaDataT, StepT, TypeT], error) {
-	// Проверяем выпуск на наличие ключа идемпотентности
+	// Проверяем стейт на наличие ключа идемпотентности
 	if findState, err := i.getStateByIdempotencyKey(ctx, options.GetIdempotencyKey()); err != nil {
 		return nil, fmt.Errorf("getStateByIdempotencyKey: %w", err)
 	} else if findState != nil {
@@ -116,14 +121,14 @@ func (i *StateMachine[DataT, FailDataT, MetaDataT, StepT, TypeT, CreateOptionsT]
 	return stepper
 }
 
-// Complete выполнение выпуска
+// Complete выполнение стейта
 func (i *StateMachine[DataT, FailDataT, MetaDataT, StepT, TypeT, CreateOptionsT]) Complete(
 	ctx context.Context,
 	stateID uuid.UUID,
 	options ...any,
 ) (st *State[DataT, FailDataT, MetaDataT, StepT, TypeT], executeErr error, err error) {
-	// Проверяем выпуск на наличие ключа идемпотентности
-	findState, err := i.getStateByID(ctx, stateID)
+	// Проверяем стейт на наличие ключа идемпотентности
+	findState, err := i.GetStateByID(ctx, stateID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("getStateByID: %w", err)
 	}

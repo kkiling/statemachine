@@ -73,7 +73,7 @@ func (r *Runner) StepRegistration(_ statemachine.StepRegistrationParams) StepReg
 			WaitingInputStep: {
 				OptionsType: reflect.TypeOf(WaitingInputOptions{}), // Устанавливаем тип ожидаемых опций
 				OnStep: func(ctx context.Context, stepContext StepContext) *StepResult {
-					// Получение опций выполнения выпуска
+					// Получение опций выполнения стейта
 					opts := WaitingInputOptions{}
 					ok, err := stepContext.GetOptions(&opts)
 					if err != nil {

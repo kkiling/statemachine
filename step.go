@@ -16,9 +16,9 @@ const (
 	errorStepState stepState = 1
 	// nextStepState шаг вернул результат своей работы, и должен быть продвинут на следующий шаг
 	nextStepState stepState = 2
-	// failStepState stepState = 2 означает что выпуск нужно зафейлить
+	// failStepState stepState = 2 означает что стейт нужно зафейлить
 	failStepState stepState = 3
-	// completeStepState означает что выпуск переведен в статус успешного завершения
+	// completeStepState означает что стейт переведен в статус успешного завершения
 	completeStepState stepState = 4
 )
 
@@ -48,8 +48,7 @@ func (s *StepContext[DataT, FailDataT, MetaDataT, StepT, TypeT]) GetOptions(v an
 	// Check if the type of completeOptions matches completeOptionsType
 	actualType := reflect.TypeOf(s.completeOptions)
 	if actualType != s.completeOptionsType {
-		return false, fmt.Errorf("type mismatch: expected %v, got %v",
-			s.completeOptionsType, actualType)
+		return false, fmt.Errorf("type mismatch: expected %v, got %v", s.completeOptionsType, actualType)
 	}
 
 	// Now perform the conversion
@@ -107,7 +106,7 @@ func (s *StepContext[DataT, FailDataT, MetaDataT, StepT, TypeT]) Complete() *Ste
 	}
 }
 
-// StepResult результат работы выпуска
+// StepResult результат работы стейта
 type StepResult[DataT any, StepT ~string] struct {
 	// Указание следующего шага на который должен перейти степпер
 	nextStatus *StepT

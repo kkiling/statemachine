@@ -9,4 +9,6 @@ var (
 	ErrAlreadyExists = errors.New("state already exists")
 	// ErrInTerminalStatus уже в терминальном статусе
 	ErrInTerminalStatus = errors.New("state already in terminal status")
+	// ErrOptionsIsUndefined ошибка добивания шага без опций
+	ErrOptionsIsUndefined = errors.New("options is undefined")
 )
