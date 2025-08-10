@@ -5,9 +5,9 @@ go 1.24.4
 require (
 	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.6.0
-	github.com/kkiling/goplatform v1.0.0
+	github.com/kkiling/goplatform v0.2.0
 	github.com/samber/lo v1.51.0
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 )
 
 require (
@@ -20,5 +20,3 @@ require (
 	golang.org/x/text v0.26.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace github.com/kkiling/goplatform v1.0.0 => ../goplatform

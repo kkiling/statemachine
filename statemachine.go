@@ -133,6 +133,10 @@ func (i *StateMachine[DataT, FailDataT, MetaDataT, StepT, TypeT, CreateOptionsT]
 		return nil, nil, fmt.Errorf("getStateByID: %w", err)
 	}
 
+	if findState == nil {
+		return nil, nil, fmt.Errorf("state not found: %w", ErrNotFound)
+	}
+
 	if findState.Status == FailedStatus || findState.Status == CompletedStatus {
 		return nil, nil, ErrInTerminalStatus
 	}
