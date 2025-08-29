@@ -38,6 +38,8 @@ type State[DataT any, FailDataT any, MetaDataT any, StepT ~string, TypeT ~string
 	FailData FailDataT
 	// MetaDataT методаные стейта
 	MetaData MetaDataT
+	// Ошибка выполнения
+	Error *string
 }
 
 // CreateState структура инициализации стейта

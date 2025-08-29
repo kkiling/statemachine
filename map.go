@@ -47,6 +47,7 @@ func mapStorageToState[DataT any, FailDataT any, MetaDataT any, StepT ~string, T
 		Data:           data,
 		FailData:       failData,
 		MetaData:       metaData,
+		Error:          state.Error,
 	}, nil
 }
 
@@ -94,5 +95,6 @@ func mapStateToStorage[DataT any, FailDataT any, MetaDataT any, StepT ~string, T
 		Data:           data,
 		FailData:       failData,
 		MetaData:       metaData,
+		Error:          state.Error,
 	}, nil
 }

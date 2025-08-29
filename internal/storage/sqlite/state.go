@@ -49,6 +49,7 @@ func (s *Storage) GetStateByIdempotencyKey(ctx context.Context, idempotencyKey s
 
 	var state storage.State
 	var idBytes []byte
+	var errorStr sql.NullString
 
 	err := s.base.Next(ctx).QueryRowContext(ctx, query, idempotencyKey[:]).Scan(
 		&idBytes,
@@ -61,7 +62,7 @@ func (s *Storage) GetStateByIdempotencyKey(ctx context.Context, idempotencyKey s
 		&state.Data,
 		&state.FailData,
 		&state.MetaData,
-		&state.Error,
+		&errorStr,
 	)
 
 	if err != nil {
@@ -73,13 +74,16 @@ func (s *Storage) GetStateByIdempotencyKey(ctx context.Context, idempotencyKey s
 		return nil, err
 	}
 
+	if errorStr.Valid {
+		state.Error = &errorStr.String
+	}
+
 	return &state, nil
 }
 
 func (s *Storage) GetStateByID(ctx context.Context, stateID uuid.UUID) (*storage.State, error) {
 	query := `
-		SELECT 
-			id, idempotency_key, created_at, updated_at, 
+		SELECT  id, idempotency_key, created_at, updated_at, 
 			status, step, type, data, fail_data, meta_data, error
 		FROM state
 		WHERE id = ?
@@ -87,6 +91,7 @@ func (s *Storage) GetStateByID(ctx context.Context, stateID uuid.UUID) (*storage
 
 	var state storage.State
 	var idBytes []byte
+	var errorStr sql.NullString
 
 	err := s.base.Next(ctx).QueryRowContext(ctx, query, stateID[:]).Scan(
 		&idBytes,
@@ -99,7 +104,7 @@ func (s *Storage) GetStateByID(ctx context.Context, stateID uuid.UUID) (*storage
 		&state.Data,
 		&state.FailData,
 		&state.MetaData,
-		&state.Error,
+		&errorStr,
 	)
 
 	if err != nil {
@@ -109,6 +114,10 @@ func (s *Storage) GetStateByID(ctx context.Context, stateID uuid.UUID) (*storage
 	state.ID, err = uuid.FromBytes(idBytes)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorStr.Valid {
+		state.Error = &errorStr.String
 	}
 
 	return &state, nil
