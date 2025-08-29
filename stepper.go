@@ -92,6 +92,7 @@ func (s *Stepper[DataT, FailDataT, MetaDataT, StepT, TypeT]) Compete(
 			// Обновляем данные стейта
 			newState.Data = *stepResult.newData
 		}
+		newState.Error = nil
 
 		// Обработка
 		isBreak := false
@@ -106,6 +107,7 @@ func (s *Stepper[DataT, FailDataT, MetaDataT, StepT, TypeT]) Compete(
 			// Шаг не двигаем
 			isBreak = true
 		case nextStepState:
+
 			if newState.Status == NewStatus {
 				newState.Status = InProgressStatus
 			}
