@@ -102,6 +102,7 @@ func (s *Stepper[DataT, FailDataT, MetaDataT, StepT, TypeT]) Compete(
 		case errorStepState:
 			// Сохранение ошибки выполнения шага если была
 			execute.Error = lo.ToPtr(stepResult.err.Error())
+			newState.Error = execute.Error
 			// Шаг не двигаем
 			isBreak = true
 		case nextStepState:
@@ -167,7 +168,7 @@ func (s *Stepper[DataT, FailDataT, MetaDataT, StepT, TypeT]) Compete(
 				Data:      data,
 				FailData:  failData,
 				MetaData:  metaData,
-				Error:     execute.Error,
+				Error:     newState.Error,
 			})
 			if terr != nil {
 				return fmt.Errorf("storage.UpdateState: %w", terr)
