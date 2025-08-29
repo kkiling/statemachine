@@ -28,6 +28,8 @@ type State struct {
 	FailData []byte
 	// MetaDataT методаные стейта
 	MetaData []byte
+	// Ошибка выполнения
+	Error *string
 }
 
 // UpdateState структура для обновление состояния стейт машины
@@ -44,6 +46,8 @@ type UpdateState struct {
 	FailData []byte
 	// MetaDataT методаные стейта
 	MetaData []byte
+	// Ошибка выполнения
+	Error *string
 }
 
 // StepExecuteInfo Информация о выполнении шагов стейт машины

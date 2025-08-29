@@ -42,7 +42,7 @@ func (s *Storage) GetStateByIdempotencyKey(ctx context.Context, idempotencyKey s
 	query := `
 		SELECT 
 			id, idempotency_key, created_at, updated_at, 
-			status, step, type, data, fail_data, meta_data
+			status, step, type, data, fail_data, meta_data, error
 		FROM state
 		WHERE idempotency_key = ?
 	`
@@ -61,6 +61,7 @@ func (s *Storage) GetStateByIdempotencyKey(ctx context.Context, idempotencyKey s
 		&state.Data,
 		&state.FailData,
 		&state.MetaData,
+		&state.Error,
 	)
 
 	if err != nil {
@@ -79,7 +80,7 @@ func (s *Storage) GetStateByID(ctx context.Context, stateID uuid.UUID) (*storage
 	query := `
 		SELECT 
 			id, idempotency_key, created_at, updated_at, 
-			status, step, type, data, fail_data, meta_data
+			status, step, type, data, fail_data, meta_data, error
 		FROM state
 		WHERE id = ?
 	`
@@ -98,6 +99,7 @@ func (s *Storage) GetStateByID(ctx context.Context, stateID uuid.UUID) (*storage
 		&state.Data,
 		&state.FailData,
 		&state.MetaData,
+		&state.Error,
 	)
 
 	if err != nil {
@@ -200,7 +202,8 @@ func (s *Storage) UpdateState(ctx context.Context, stateID uuid.UUID, state stor
 			step = ?,
 			data = ?,
 			fail_data = ?,
-			meta_data = ?
+			meta_data = ?,
+			error = ?
 		WHERE id = ?
 	`
 
@@ -211,6 +214,7 @@ func (s *Storage) UpdateState(ctx context.Context, stateID uuid.UUID, state stor
 		state.Data,
 		state.FailData,
 		state.MetaData,
+		state.Error,
 		stateID[:],
 	)
 

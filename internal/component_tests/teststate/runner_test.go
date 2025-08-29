@@ -167,6 +167,7 @@ func TestTaskRunner_MockDb(t *testing.T) {
 			}),
 			FailData: []byte{},
 			MetaData: []byte{},
+			Error:    nil,
 		})
 
 		// Второе выполнение - шаг TestErrorStep
@@ -195,6 +196,7 @@ func TestTaskRunner_MockDb(t *testing.T) {
 			}),
 			FailData: []byte{},
 			MetaData: []byte{},
+			Error:    lo.ToPtr("counter eq 2"),
 		})
 
 		completeState, executeErr, err := deps.service.Complete(deps.ctx, stateID)

@@ -167,6 +167,7 @@ func (s *Stepper[DataT, FailDataT, MetaDataT, StepT, TypeT]) Compete(
 				Data:      data,
 				FailData:  failData,
 				MetaData:  metaData,
+				Error:     execute.Error,
 			})
 			if terr != nil {
 				return fmt.Errorf("storage.UpdateState: %w", terr)
