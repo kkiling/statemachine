@@ -16,12 +16,21 @@ import (
 	"github.com/kkiling/statemachine/internal/storage"
 )
 
-func mustBeData(data Data) []byte {
+func marshalData(data Data) []byte {
 	d, err := json.Marshal(data)
 	if err != nil {
 		panic(err)
 	}
 	return d
+}
+
+func toData(data []byte) Data {
+	res := Data{}
+	err := json.Unmarshal(data, &res)
+	if err != nil {
+		panic(err)
+	}
+	return res
 }
 
 func TestTaskRunner_MockDb(t *testing.T) {
@@ -46,7 +55,7 @@ func TestTaskRunner_MockDb(t *testing.T) {
 			Status:         statemachine.NewStatus,
 			Step:           string(FirstStep),
 			Type:           string(TestType),
-			Data: mustBeData(Data{
+			Data: marshalData(Data{
 				Counter: 0,
 				Title:   createOpts.Title,
 				Amount:  createOpts.Amount,
@@ -160,7 +169,7 @@ func TestTaskRunner_MockDb(t *testing.T) {
 			UpdatedAt: completeExecutedAt1,
 			Status:    statemachine.InProgressStatus,
 			Step:      string(TestErrorStep),
-			Data: mustBeData(Data{
+			Data: marshalData(Data{
 				Counter: 1,
 				Title:   "start title",
 				Amount:  42,
@@ -189,7 +198,7 @@ func TestTaskRunner_MockDb(t *testing.T) {
 			UpdatedAt: completeExecutedAt1,
 			Status:    statemachine.InProgressStatus,
 			Step:      string(TestErrorStep),
-			Data: mustBeData(Data{
+			Data: marshalData(Data{
 				Counter: 2,
 				Title:   "start title",
 				Amount:  42,
@@ -234,7 +243,7 @@ func TestTaskRunner_MockDb(t *testing.T) {
 		init := initStateDb()
 		init.Step = string(TestErrorStep)
 		init.Status = statemachine.InProgressStatus
-		init.Data = mustBeData(Data{
+		init.Data = marshalData(Data{
 			Counter: 2, // Состояние counter как раз что бы получить empty
 			Title:   "start title",
 			Amount:  42,
@@ -264,7 +273,7 @@ func TestTaskRunner_MockDb(t *testing.T) {
 			UpdatedAt: init.UpdatedAt, // Шаг не изменился, по этому время остается старым
 			Status:    statemachine.InProgressStatus,
 			Step:      string(TestErrorStep),
-			Data:      mustBeData(resultData),
+			Data:      marshalData(resultData),
 			FailData:  []byte{},
 			MetaData:  []byte{},
 		})
@@ -296,7 +305,7 @@ func TestTaskRunner_MockDb(t *testing.T) {
 		init := initStateDb()
 		init.Step = string(TestErrorStep)
 		init.Status = statemachine.InProgressStatus
-		init.Data = mustBeData(Data{
+		init.Data = marshalData(Data{
 			Counter: 3, // Состояние counter как раз что бы перейти на след шаг
 			Title:   "start title",
 			Amount:  42,
@@ -335,7 +344,7 @@ func TestTaskRunner_MockDb(t *testing.T) {
 			UpdatedAt: completeExecutedAt,
 			Status:    statemachine.InProgressStatus,
 			Step:      string(WaitingInputStep), // Перешли на след шаг
-			Data:      mustBeData(resultData),
+			Data:      marshalData(resultData),
 			FailData:  []byte{},
 			MetaData:  []byte{},
 		}) //
@@ -373,7 +382,7 @@ func TestTaskRunner_MockDb(t *testing.T) {
 		init := initStateDb()
 		init.Step = string(WaitingInputStep)
 		init.Status = statemachine.InProgressStatus
-		init.Data = mustBeData(Data{
+		init.Data = marshalData(Data{
 			Counter: 3,
 			Title:   "start title",
 			Amount:  42,
@@ -412,7 +421,7 @@ func TestTaskRunner_MockDb(t *testing.T) {
 		init := initStateDb()
 		init.Step = string(WaitingInputStep)
 		init.Status = statemachine.InProgressStatus
-		init.Data = mustBeData(Data{
+		init.Data = marshalData(Data{
 			Counter: 3,
 			Title:   "start title",
 			Amount:  42,
@@ -460,7 +469,7 @@ func TestTaskRunner_RealDB(t *testing.T) {
 				Title:          "Custom title",
 				Amount:         42,
 			}
-			deps = setupTestDepsSqlite(t)
+			deps = setupTestDepsStorage(t)
 
 			now = time.Now()
 			// Фиксация времени начала выполнения шага
@@ -477,7 +486,7 @@ func TestTaskRunner_RealDB(t *testing.T) {
 		newState, err := deps.service.Create(deps.ctx, &createOpts)
 		require.NoError(t, err)
 
-		findState, err := deps.storageSqlite.GetStateByID(deps.ctx, newState.ID)
+		findState, err := deps.storage.GetStateByID(deps.ctx, newState.ID)
 		require.NoError(t, err)
 		require.Equal(t, newState.ID, findState.ID)
 
@@ -504,7 +513,7 @@ func TestTaskRunner_RealDB(t *testing.T) {
 		require.Equal(t, completeState.ID, stateID)
 
 		// Прверяем в базе что данные совпадают
-		findState, err = deps.storageSqlite.GetStateByID(deps.ctx, newState.ID)
+		findState, err = deps.storage.GetStateByID(deps.ctx, newState.ID)
 		require.NoError(t, err)
 		require.Equal(t, findState.ID, stateID)
 		require.Equal(t, findState.CreatedAt.Unix(), createdAt.Unix())
@@ -513,14 +522,14 @@ func TestTaskRunner_RealDB(t *testing.T) {
 		require.Equal(t, findState.Type, string(TestType))
 		require.Equal(t, findState.Status, statemachine.InProgressStatus)
 		require.Equal(t, findState.Step, string(TestErrorStep))
-		require.Equal(t, findState.Data, mustBeData(Data{
+		require.Equal(t, toData(findState.Data), Data{
 			Counter: 2,
 			Title:   "start title",
 			Amount:  42,
-		}))
+		})
 
 		// Проверяем step execute info
-		infos, err := deps.storageSqlite.GetStepExecuteInfos(deps.ctx, stateID)
+		infos, err := deps.storage.GetStepExecuteInfos(deps.ctx, stateID)
 		require.NoError(t, err)
 		require.Len(t, infos, 2)
 		// Первый шаг
@@ -538,6 +547,5 @@ func TestTaskRunner_RealDB(t *testing.T) {
 		require.Equal(t, *infos[1].Error, "counter eq 2")
 		require.Equal(t, infos[1].PreviewStep, string(TestErrorStep))
 		require.Nil(t, infos[1].NextStep)
-
 	})
 }

@@ -1,11 +1,11 @@
 package statemachine
 
 import (
-	"github.com/kkiling/goplatform/storagebase/sqlitebase"
-
-	"github.com/kkiling/statemachine/internal/storage/sqlite"
+	"github.com/kkiling/goplatform/storagebase/postgrebase"
 )
 
-type SqliteConfig = sqlitebase.Config
+type StorageConfig = postgrebase.Config
 
-var NewSqliteStorage = sqlite.NewStorage
+var NewStorage = postgrebase.NewStorage
+
+var NewPgConn = postgrebase.NewPgConn

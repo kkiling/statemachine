@@ -7,7 +7,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/kkiling/goplatform/storagebase/testutils"
 
-	"github.com/kkiling/statemachine/internal/storage/sqlite"
+	"github.com/kkiling/statemachine/internal/storage/postgresql"
 	mock_statemachine "github.com/kkiling/statemachine/mocks"
 )
 
@@ -18,7 +18,7 @@ type testDeps struct {
 	clock         *mock_statemachine.MockClock
 	uuidGenerator *mock_statemachine.MockUUIDGenerator
 	storageMock   *mock_statemachine.MockStorage
-	storageSqlite *sqlite.Storage
+	storage       *postgresql.Storage
 }
 
 func setupTestDeps(t *testing.T, opts ...func(d *testDeps)) *testDeps {
@@ -48,11 +48,11 @@ func setupTestDeps(t *testing.T, opts ...func(d *testDeps)) *testDeps {
 	return deps
 }
 
-func setupTestDepsSqlite(t *testing.T) *testDeps {
+func setupTestDepsStorage(t *testing.T) *testDeps {
 	return setupTestDeps(t, func(deps *testDeps) {
-		deps.storageSqlite, _ = sqlite.NewTestStorage(testutils.SetupSqlTestDB(t))
+		deps.storage = postgresql.NewTestStorage(testutils.SetupPostgresqlTestDB(t))
 		deps.storageMock = nil
-		deps.service = NewState(deps.storageSqlite)
+		deps.service = NewState(deps.storage)
 		deps.service.SetClock(deps.clock)
 		deps.service.SetUUIDGenerator(deps.uuidGenerator)
 	})
