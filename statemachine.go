@@ -101,7 +101,7 @@ func (i *StateMachine[DataT, FailDataT, MetaDataT, StepT, TypeT, CreateOptionsT]
 
 	newStorageState, err := mapStateToStorage[DataT, FailDataT, MetaDataT, StepT, TypeT](&newIssue)
 	if err != nil {
-		return nil, fmt.Errorf("mapStateT2: %w", err)
+		return nil, fmt.Errorf("mapStateToStorage: %w", err)
 	}
 
 	saveErr := i.storage.CreateState(ctx, newStorageState)

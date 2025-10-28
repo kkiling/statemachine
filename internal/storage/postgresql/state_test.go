@@ -1,4 +1,4 @@
-package sqlite
+package postgresql
 
 import (
 	"context"
@@ -15,10 +15,33 @@ import (
 	"github.com/kkiling/statemachine/internal/storage"
 )
 
+func stateEqual(t *testing.T, a, b *storage.State) {
+	require.Equal(t, a.ID, b.ID)
+	require.Equal(t, a.IdempotencyKey, b.IdempotencyKey)
+	require.Equal(t, a.CreatedAt.Unix(), b.CreatedAt.Unix())
+	require.Equal(t, a.UpdatedAt.Unix(), b.UpdatedAt.Unix())
+	require.Equal(t, a.Status, b.Status)
+	require.Equal(t, a.Step, b.Step)
+	require.Equal(t, a.Type, b.Type)
+	require.Equal(t, a.Data, b.Data)
+	require.Equal(t, a.FailData, b.FailData)
+	require.Equal(t, a.MetaData, b.MetaData)
+	require.Equal(t, a.Error, b.Error)
+}
+
+func stepExecuteInfoEqual(t *testing.T, a, b storage.StepExecuteInfo) {
+	require.Equal(t, a.StateID, b.StateID)
+	require.Equal(t, a.StartExecutedAt.Unix(), b.StartExecutedAt.Unix())
+	require.Equal(t, a.CompleteExecutedAt.Unix(), b.CompleteExecutedAt.Unix())
+	require.Equal(t, a.Error, b.Error)
+	require.Equal(t, a.PreviewStep, b.PreviewStep)
+	require.Equal(t, a.NextStep, b.NextStep)
+}
+
 func TestCreateState(t *testing.T) {
 	t.Parallel()
 
-	s, _ := NewTestStorage(testutils.SetupSqlTestDB(t))
+	s := NewTestStorage(testutils.SetupPostgresqlTestDB(t))
 	ctx := context.Background()
 
 	t.Run("successful creation", func(t *testing.T) {
@@ -30,9 +53,9 @@ func TestCreateState(t *testing.T) {
 			Status:         1,
 			Step:           "initial",
 			Type:           "test",
-			Data:           []byte(`{"key":"value"}`),
+			Data:           []byte(`{"key": "value"}`),
 			FailData:       nil,
-			MetaData:       []byte(`{"meta":"data"}`),
+			MetaData:       []byte(`{"meta": "data"}`),
 		}
 
 		err := s.CreateState(ctx, state)
@@ -41,7 +64,7 @@ func TestCreateState(t *testing.T) {
 		// Проверяем, что состояние действительно сохранено
 		savedState, err := s.GetStateByID(ctx, state.ID)
 		require.NoError(t, err)
-		require.Equal(t, state, savedState)
+		stateEqual(t, state, savedState)
 	})
 
 	t.Run("duplicate id", func(t *testing.T) {
@@ -135,7 +158,7 @@ func TestCreateState(t *testing.T) {
 
 func TestGetStateByIdempotencyKey(t *testing.T) {
 	t.Parallel()
-	s, _ := NewTestStorage(testutils.SetupSqlTestDB(t))
+	s := NewTestStorage(testutils.SetupPostgresqlTestDB(t))
 	ctx := context.Background()
 
 	t.Run("successful get", func(t *testing.T) {
@@ -150,9 +173,9 @@ func TestGetStateByIdempotencyKey(t *testing.T) {
 			Status:         1,
 			Step:           "initial",
 			Type:           "test",
-			Data:           []byte(`{"key":"value"}`),
+			Data:           []byte(`{"key": "value"}`),
 			FailData:       nil,
-			MetaData:       []byte(`{"meta":"data"}`),
+			MetaData:       []byte(`{"meta": "data"}`),
 		}
 
 		// Сначала создаем состояние
@@ -163,7 +186,7 @@ func TestGetStateByIdempotencyKey(t *testing.T) {
 		state, err := s.GetStateByIdempotencyKey(ctx, testState.IdempotencyKey)
 		require.NoError(t, err)
 		require.NotNil(t, state)
-		require.Equal(t, testState, state)
+		stateEqual(t, testState, state)
 	})
 
 	t.Run("not found", func(t *testing.T) {
@@ -192,7 +215,7 @@ func TestGetStateByIdempotencyKey(t *testing.T) {
 
 func TestGetStateByID(t *testing.T) {
 	t.Parallel()
-	s, _ := NewTestStorage(testutils.SetupSqlTestDB(t))
+	s := NewTestStorage(testutils.SetupPostgresqlTestDB(t))
 	ctx := context.Background()
 
 	// Подготовка тестовых данных
@@ -204,9 +227,9 @@ func TestGetStateByID(t *testing.T) {
 		Status:         124,
 		Step:           "initial",
 		Type:           "test_transaction",
-		Data:           []byte(`{"amount":100}`),
+		Data:           []byte(`{"amount": 100}`),
 		FailData:       nil,
-		MetaData:       []byte(`{"user_id":123}`),
+		MetaData:       []byte(`{"user_id": 123}`),
 	}
 
 	// Сначала создаем состояние
@@ -221,7 +244,7 @@ func TestGetStateByID(t *testing.T) {
 		require.NotNil(t, state)
 
 		// Проверяем все поля
-		require.Equal(t, testState, state)
+		stateEqual(t, testState, state)
 	})
 
 	t.Run("not found", func(t *testing.T) {
@@ -246,7 +269,7 @@ func TestGetStateByID(t *testing.T) {
 }
 
 func TestSaveStepExecuteInfo(t *testing.T) {
-	s, _ := NewTestStorage(testutils.SetupSqlTestDB(t))
+	s := NewTestStorage(testutils.SetupPostgresqlTestDB(t))
 	ctx := context.Background()
 
 	saveTestState := func(t *testing.T) *storage.State {
@@ -284,7 +307,7 @@ func TestSaveStepExecuteInfo(t *testing.T) {
 		saved, err := s.GetStepExecuteInfos(ctx, testState.ID)
 		require.NoError(t, err)
 		require.Len(t, saved, 1)
-		require.Equal(t, info, saved[0])
+		stepExecuteInfoEqual(t, info, saved[0])
 	})
 
 	t.Run("fail on non-existent state", func(t *testing.T) {
@@ -296,7 +319,7 @@ func TestSaveStepExecuteInfo(t *testing.T) {
 
 		err := s.SaveStepExecuteInfo(ctx, info)
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "FOREIGN KEY constraint failed")
+		require.ErrorIs(t, err, storagebase.ErrForeignKeyViolation)
 	})
 
 	t.Run("successful save multiple steps", func(t *testing.T) {
@@ -334,7 +357,7 @@ func TestSaveStepExecuteInfo(t *testing.T) {
 }
 
 func TestGetStepExecuteInfos(t *testing.T) {
-	s, _ := NewTestStorage(testutils.SetupSqlTestDB(t))
+	s := NewTestStorage(testutils.SetupPostgresqlTestDB(t))
 	ctx := context.Background()
 
 	saveTestState := func(t *testing.T) *storage.State {
@@ -371,7 +394,7 @@ func TestGetStepExecuteInfos(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, infos, 1)
 
-		require.Equal(t, info, infos[0])
+		stepExecuteInfoEqual(t, info, infos[0])
 	})
 
 	t.Run("get multiple steps ordered by time", func(t *testing.T) {
@@ -410,9 +433,9 @@ func TestGetStepExecuteInfos(t *testing.T) {
 		find, err := s.GetStepExecuteInfos(ctx, state.ID)
 		require.NoError(t, err)
 		require.Len(t, infos, 3)
-		require.Equal(t, infos[1], find[0]) // step_1
-		require.Equal(t, infos[0], find[1]) // step_2
-		require.Equal(t, infos[2], find[2]) // step_3
+		stepExecuteInfoEqual(t, infos[1], find[0]) // step_1
+		stepExecuteInfoEqual(t, infos[0], find[1]) // step_2
+		stepExecuteInfoEqual(t, infos[2], find[2]) // step_3
 	})
 
 	t.Run("return empty slice for unknown state", func(t *testing.T) {
@@ -423,7 +446,7 @@ func TestGetStepExecuteInfos(t *testing.T) {
 }
 
 func TestUpdateState(t *testing.T) {
-	s, _ := NewTestStorage(testutils.SetupSqlTestDB(t))
+	s := NewTestStorage(testutils.SetupPostgresqlTestDB(t))
 	ctx := context.Background()
 
 	const (
@@ -469,12 +492,12 @@ func TestUpdateState(t *testing.T) {
 		updatedState, err := s.GetStateByID(ctx, testState.ID)
 		require.NoError(t, err)
 
-		require.Equal(t, update.UpdatedAt, updatedState.UpdatedAt)
 		require.Equal(t, update.Status, updatedState.Status)
 		require.Equal(t, update.Step, updatedState.Step)
 		require.Equal(t, update.Data, updatedState.Data)
 		require.Equal(t, update.FailData, updatedState.FailData)
 		require.Equal(t, update.MetaData, updatedState.MetaData)
+		require.Equal(t, update.UpdatedAt.Unix(), updatedState.UpdatedAt.Unix())
 	})
 
 	t.Run("successful partial update", func(t *testing.T) {
@@ -498,7 +521,7 @@ func TestUpdateState(t *testing.T) {
 		updatedState, err := s.GetStateByID(ctx, testState.ID)
 		require.NoError(t, err)
 
-		require.Equal(t, update.UpdatedAt, updatedState.UpdatedAt)
+		require.Equal(t, update.UpdatedAt.Unix(), updatedState.UpdatedAt.Unix())
 		require.Equal(t, update.Status, updatedState.Status)
 		require.Equal(t, update.Step, updatedState.Step)
 		require.Equal(t, update.FailData, updatedState.FailData)

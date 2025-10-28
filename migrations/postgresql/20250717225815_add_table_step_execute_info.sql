@@ -1,10 +1,10 @@
 -- +goose Up
 -- +goose StatementBegin
 CREATE TABLE step_execute_info (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    state_id BLOB NOT NULL,
-    start_executed_at TIMESTAMP NOT NULL,
-    complete_executed_at TIMESTAMP,
+    id SERIAL PRIMARY KEY,
+    state_id UUID NOT NULL,
+    start_executed_at TIMESTAMPTZ NOT NULL,
+    complete_executed_at TIMESTAMPTZ NOT NULL,
     error TEXT,
     preview_step TEXT NOT NULL,
     next_step TEXT,
