@@ -33,7 +33,7 @@ test-db:
 	# Удаляем и создаем базу данных используя правильные учетные данные
 	psql postgresql://${TEST_DB_USERNAME}:${TEST_DB_PASSWORD}@${DB_HOST}:${DB_PORT}/postgres -c "DROP DATABASE IF EXISTS ${TEST_DB_NAME};"
 	psql postgresql://${TEST_DB_USERNAME}:${TEST_DB_PASSWORD}@${DB_HOST}:${DB_PORT}/postgres -c "CREATE DATABASE ${TEST_DB_NAME};"
-	@echo "\n --- 🖲️ Applying statemachine postgresql migrations --- \n"
+	@echo "\n --- 🖲️ Applying postgresql migrations --- \n"
 	# Накатываем миграции на тестовую базу
 	goose -dir=./migrations/postgresql postgres "postgresql://${TEST_DB_USERNAME}:${TEST_DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${TEST_DB_NAME}?sslmode=disable" up
 
